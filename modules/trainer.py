@@ -48,7 +48,7 @@ class Trainer():
         self.batch_time_e = AverageMeter()
 
         # put logger where it belongs
-        self.tb_logger = Logger(self.logdir + "/tb")
+        self.tb_logger = Logger(f"{self.logdir}/tb")
         self.info = {"train_update": 0,
                      "train_loss": 0, "train_acc": 0, "train_iou": 0,
                      "valid_loss": 0, "valid_acc": 0, "valid_iou": 0,
@@ -110,10 +110,11 @@ class Trainer():
         """
         # self.criterion = nn.NLLLoss(weight=self.loss_w).to(self.device)
         self.criterion = nn.NLLLoss(weight=self.loss_w.double()).to(self.device)
-        if not point_refine:
-            self.ls = Lovasz_softmax(ignore=0).to(self.device)
-        else:
-            self.ls = Lovasz_softmax_PointCloud(ignore=0).to(self.device)
+        self.ls = (
+            Lovasz_softmax_PointCloud(ignore=0).to(self.device)
+            if point_refine
+            else Lovasz_softmax(ignore=0).to(self.device)
+        )
 
         # loss as dataparallel too (more images in batch)
         if self.n_gpus > 1:
@@ -214,14 +215,14 @@ class Trainer():
                 tag = tag.replace('.', '/')
                 logger.add_histogram(tag, value.data.cpu().numpy(), epoch)
                 if value.grad is not None:
-                    logger.add_histogram(tag + '/grad', value.grad.data.cpu().numpy(), epoch)
+                    logger.add_histogram(f'{tag}/grad', value.grad.data.cpu().numpy(), epoch)
 
         if img_summary and len(imgs) > 0:
             directory = os.path.join(logdir, "predictions")
             if not os.path.isdir(directory):
                 os.makedirs(directory)
             for i, img in enumerate(imgs):
-                name = os.path.join(directory, str(i) + ".png")
+                name = os.path.join(directory, f"{str(i)}.png")
                 cv2.imwrite(name, img)
 
     def init_evaluator(self):
@@ -399,9 +400,7 @@ class Trainer():
 
         with torch.no_grad():
             end = time.time()
-            for i, (in_vol, proj_mask, proj_labels, _, path_seq, path_name,
-                    _, _, _, _, _, _, _, _, _)\
-                    in enumerate(tqdm(val_loader, desc="Validation:", ncols=80)):
+            for in_vol, proj_mask, proj_labels, _, path_seq, path_name, _, _, _, _, _, _, _, _, _ in tqdm(val_loader, desc="Validation:", ncols=80):
                 if not self.multi_gpu and self.gpu:
                     in_vol = in_vol.cuda()
                     proj_mask = proj_mask.cuda()
@@ -458,7 +457,7 @@ class Trainer():
 
             # print also classwise
             for i, jacc in enumerate(class_jaccard):
-                self.info["valid_classes/" + class_func(i)] = jacc
+                self.info[f"valid_classes/{class_func(i)}"] = jacc
                 str_line = 'IoU class {i:} [{class_str:}] = {jacc:.6f}'.format(
                     i=i, class_str=class_func(i), jacc=jacc)
                 print(str_line)

@@ -27,10 +27,7 @@ def remap(label, mapdict):
     # make learning map a lookup table
     maxkey = 0
     for key, data in mapdict.items():
-        if isinstance(data, list):
-            nel = len(data)
-        else:
-            nel = 1
+        nel = len(data) if isinstance(data, list) else 1
         if key > maxkey:
             maxkey = key
     # +100 hack making lut bigger just in case there are unknown labels
@@ -78,11 +75,13 @@ if __name__ == '__main__':
         scan_path = f'{data_path}/sequences/{seq}/velodyne/{str_fid}.bin'
         scan.open_scan(scan_path)
 
+        power = 16
         for key, value in path.items():
-            if key == 'gtlabel':
-                label_path = f'{value}/sequences/{seq}/labels/{str_fid}.label'
-            else:
-                label_path = f'{value}/sequences/{seq}/predictions/{str_fid}.label'
+            label_path = (
+                f'{value}/sequences/{seq}/labels/{str_fid}.label'
+                if key == 'gtlabel'
+                else f'{value}/sequences/{seq}/predictions/{str_fid}.label'
+            )
 
             print(key)
 
@@ -93,7 +92,6 @@ if __name__ == '__main__':
             scan.colorize()
             scan.do_label_projection()
 
-            power = 16
             data = np.copy(scan.proj_range)
 
             data[data > 0] = data[data > 0]**(1 / power)

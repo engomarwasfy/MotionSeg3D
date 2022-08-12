@@ -20,7 +20,7 @@ class SalsaNextWithMotionAttention(nn.Module):
         self.range_channel = 5
         print("Channel of range image input = ", self.range_channel)
         print("Number of residual images input = ", params['train']['n_input_scans'])
-        
+
         self.downCntx = ResContextBlock(self.range_channel, 32)
         self.downCntx2 = ResContextBlock(32, 32)
         self.downCntx3 = ResContextBlock(32, 32)
@@ -56,7 +56,7 @@ class SalsaNextWithMotionAttention(nn.Module):
         self.RI_upBlock2 = UpBlock(4 * 32, 4 * 32, 0.2)
         self.RI_upBlock3 = UpBlock(4 * 32, 2 * 32, 0.2)
         self.RI_upBlock4 = UpBlock(2 * 32, 32, 0.2, drop_out=False)
-        
+
         self.logits3 = nn.Conv2d(32, nclasses, kernel_size=(1, 1))
 
         if self.use_attention == "MGA":
@@ -79,8 +79,6 @@ class SalsaNextWithMotionAttention(nn.Module):
 
             self.conv1x1_layer4_channel_wise = nn.Conv2d(256, 256, 1, bias=True)
             self.conv1x1_layer4_spatial = nn.Conv2d(256, 1, 1, bias=True)
-        else:
-            pass # raise NotImplementedError
 
     def encoder_attention_module_MGA_tmc(self, img_feat, flow_feat, conv1x1_channel_wise, conv1x1_spatial):
         """
@@ -89,7 +87,7 @@ class SalsaNextWithMotionAttention(nn.Module):
             channel_attentioned_img_feat:  [bsize, channel, h, w]
         """
         # spatial attention
-        flow_feat_map = conv1x1_spatial(flow_feat)  
+        flow_feat_map = conv1x1_spatial(flow_feat)
         flow_feat_map = nn.Sigmoid()(flow_feat_map)
         spatial_attentioned_img_feat = flow_feat_map * img_feat
 
@@ -99,8 +97,7 @@ class SalsaNextWithMotionAttention(nn.Module):
         feat_vec = nn.Softmax(dim=1)(feat_vec) * feat_vec.shape[1]
         channel_attentioned_img_feat = spatial_attentioned_img_feat * feat_vec
 
-        final_feat = channel_attentioned_img_feat + img_feat
-        return final_feat
+        return channel_attentioned_img_feat + img_feat
 
     def forward(self, x):
         """

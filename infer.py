@@ -8,7 +8,7 @@ from modules.user_refine import *
 
 
 if __name__ == '__main__':
-    
+
     parser = get_args(flags="infer")
     FLAGS, unparsed = parser.parse_known_args()
 
@@ -22,17 +22,31 @@ if __name__ == '__main__':
     print("----------\n")
 
     # open arch / data config file
-    ARCH = load_yaml(FLAGS.model + "/arch_cfg.yaml")
-    DATA = load_yaml(FLAGS.model + "/data_cfg.yaml")
+    ARCH = load_yaml(f"{FLAGS.model}/arch_cfg.yaml")
+    DATA = load_yaml(f"{FLAGS.model}/data_cfg.yaml")
 
     make_predictions_dir(FLAGS, DATA) # create predictions file folder
     check_model_dir(FLAGS.model)      # does model folder exist?
 
     # create user and infer dataset
-    if not FLAGS.pointrefine:
-        user = User(ARCH, DATA, datadir=FLAGS.dataset, outputdir=FLAGS.log,
-                    modeldir=FLAGS.model, split=FLAGS.split)
-    else:
-        user = UserRefine(ARCH, DATA, datadir=FLAGS.dataset, outputdir=FLAGS.log,
-                          modeldir=FLAGS.model, split=FLAGS.split)
+    user = (
+        UserRefine(
+            ARCH,
+            DATA,
+            datadir=FLAGS.dataset,
+            outputdir=FLAGS.log,
+            modeldir=FLAGS.model,
+            split=FLAGS.split,
+        )
+        if FLAGS.pointrefine
+        else User(
+            ARCH,
+            DATA,
+            datadir=FLAGS.dataset,
+            outputdir=FLAGS.log,
+            modeldir=FLAGS.model,
+            split=FLAGS.split,
+        )
+    )
+
     user.infer()

@@ -171,11 +171,8 @@ class GlShader:
 
   @staticmethod
   def fromFile(shader_type, filename):
-    f = open(filename)
-    source = "\n".join(f.readlines())
-    # todo: preprocess.
-    f.close()
-
+    with open(filename) as f:
+      source = "\n".join(f.readlines())
     return GlShader(shader_type, source)
 
 
@@ -205,7 +202,8 @@ class GlProgram:
   def __setitem__(self, name, value):
     # quitely ignore
     if name not in self.uniform_types_:
-      if WARN_INVALID_UNIFORMS: print("No uniform with name '{}' available.".format(name))
+      if WARN_INVALID_UNIFORMS:
+        print(f"No uniform with name '{name}' available.")
       return
 
     loc = gl.glGetUniformLocation(self.id_, name)
@@ -245,7 +243,7 @@ class GlProgram:
     elif T == "sampler2DRect":
       gl.glUniform1i(loc, np.int32(value))
     else:
-      raise NotImplementedError("uniform type {} not implemented. :(".format(T))
+      raise NotImplementedError(f"uniform type {T} not implemented. :(")
 
   def link(self):
     if gl.GL_VERTEX_SHADER not in self.shaders_ or gl.GL_FRAGMENT_SHADER not in self.shaders_:
@@ -254,9 +252,8 @@ class GlProgram:
     for shader in self.shaders_.values():
       gl.glAttachShader(self.id_, shader.id)
       for line in shader.code.split("\n"):
-        match = re.search(r"uniform\s+(\S+)\s+(\S+)\s*;", line)
-        if match:
-          self.uniform_types_[match.group(2)] = match.group(1)
+        if match := re.search(r"uniform\s+(\S+)\s+(\S+)\s*;", line):
+          self.uniform_types_[match[2]] = match[1]
 
     gl.glLinkProgram(self.id_)
     isLinked = bool(gl.glGetProgramiv(self.id_, gl.GL_LINK_STATUS))

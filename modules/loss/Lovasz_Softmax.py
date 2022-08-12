@@ -48,9 +48,7 @@ def mean(l, ignore_nan=False, empty=0):
         return empty
     for n, v in enumerate(l, 2):
         acc += v
-    if n == 1:
-        return acc
-    return acc / n
+    return acc if n == 1 else acc / n
 
 
 def lovasz_grad(gt_sorted):
@@ -64,7 +62,7 @@ def lovasz_grad(gt_sorted):
     union = gts + (1 - gt_sorted).float().cumsum(0)
     jaccard = 1. - intersection / union
     if p > 1:  # cover 1-pixel case
-        jaccard[1:p] = jaccard[1:p] - jaccard[0:-1]
+        jaccard[1:p] = jaccard[1:p] - jaccard[:-1]
     return jaccard
 
 
@@ -78,12 +76,19 @@ def lovasz_softmax(probas, labels, classes='present', per_image=False, ignore=No
       per_image: compute the loss per image instead of per batch
       ignore: void class labels
     """
-    if per_image:
-        loss = mean(lovasz_softmax_flat(*flatten_probas(prob.unsqueeze(0), lab.unsqueeze(0), ignore), classes=classes)
-                    for prob, lab in zip(probas, labels))
-    else:
-        loss = lovasz_softmax_flat(*flatten_probas(probas, labels, ignore), classes=classes)
-    return loss
+    return (
+        mean(
+            lovasz_softmax_flat(
+                *flatten_probas(prob.unsqueeze(0), lab.unsqueeze(0), ignore),
+                classes=classes
+            )
+            for prob, lab in zip(probas, labels)
+        )
+        if per_image
+        else lovasz_softmax_flat(
+            *flatten_probas(probas, labels, ignore), classes=classes
+        )
+    )
 
 
 def lovasz_softmax_flat(probas, labels, classes='present'):
@@ -160,10 +165,9 @@ class Lovasz_softmax_PointCloud(nn.Module):
         B, C, N = probas.size()
         probas = probas.permute(0, 2, 1).contiguous().view(-1, C)
         labels = labels.view(-1)
-        if self.ignore is not None:
-            valid = (labels != self.ignore)
-            vprobas = probas[valid.nonzero(as_tuple=False).squeeze()]
-            vlabels = labels[valid]
-            return lovasz_softmax_flat(vprobas, vlabels, classes=self.classes)
-        else:
+        if self.ignore is None:
             return lovasz_softmax_flat(probas, labels, classes=self.classes)
+        valid = (labels != self.ignore)
+        vprobas = probas[valid.nonzero(as_tuple=False).squeeze()]
+        vlabels = labels[valid]
+        return lovasz_softmax_flat(vprobas, vlabels, classes=self.classes)

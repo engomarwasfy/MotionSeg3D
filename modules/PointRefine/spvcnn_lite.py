@@ -117,8 +117,7 @@ class BasicConvolutionBlock(nn.Module):
         )
 
     def forward(self, x):
-        out = self.net(x)
-        return out
+        return self.net(x)
 
 
 class BasicDeconvolutionBlock(nn.Module):
@@ -168,8 +167,7 @@ class ResidualBlock(nn.Module):
         self.relu = spnn.ReLU(True)
 
     def forward(self, x):
-        out = self.relu(self.net(x) + self.downsample(x))
-        return out
+        return self.relu(self.net(x) + self.downsample(x))
 
 
 class SPVCNN(nn.Module):
@@ -274,5 +272,4 @@ class SPVCNN(nn.Module):
 
         out = self.classifier(z3.F)
 
-        scores = nn.functional.softmax(out, dim=1)
-        return scores
+        return nn.functional.softmax(out, dim=1)

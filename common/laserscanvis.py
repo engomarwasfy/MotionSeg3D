@@ -132,7 +132,7 @@ class LaserScanVis:
             self.scan.colorize()
 
         # then change names
-        title = "scan " + str(self.offset) + " of " + str(len(self.scan_names)-1)
+        title = f"scan {str(self.offset)} of {str(len(self.scan_names) - 1)}"
         self.canvas.title = title
         self.img_canvas.title = title
 
@@ -176,7 +176,7 @@ class LaserScanVis:
         data[data < 0] = data[data > 0].min()
         # print(data.max(), data.min())
         data = (data - data[data > 0].min()) / \
-                (data.max() - data[data > 0].min())
+                    (data.max() - data[data > 0].min())
         # print(data.max(), data.min())
         self.img_vis.set_data(data)
         self.img_vis.update()
@@ -203,7 +203,7 @@ class LaserScanVis:
             if self.offset <= 0:
                 self.offset = len(self.scan_names)-1
             self.update_scan()
-        elif event.key == 'Q' or event.key == 'Escape':
+        elif event.key in ['Q', 'Escape']:
             self.destroy()
 
     def draw(self, event):

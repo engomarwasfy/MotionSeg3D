@@ -31,12 +31,17 @@ def set_seed(seed=1024):
 if __name__ == '__main__':
     parser = get_args(flags="train")
     FLAGS, unparsed = parser.parse_known_args()
-    FLAGS.log = FLAGS.log + '/logs/' + datetime.now().strftime("%Y-%-m-%d-%H:%M") + FLAGS.name
-    
+    FLAGS.log = (
+        f'{FLAGS.log}/logs/'
+        + datetime.now().strftime("%Y-%-m-%d-%H:%M")
+        + FLAGS.name
+    )
+
+
     # open arch / data config file
     ARCH = load_yaml(FLAGS.arch_cfg)
     DATA = load_yaml(FLAGS.data_cfg)
-    
+
     params = SalsaNextWithMotionAttention(nclasses=3, params=ARCH)
     pytorch_total_params = sum(p.numel() for p in params.parameters() if p.requires_grad)
     del params
@@ -47,7 +52,7 @@ if __name__ == '__main__':
     print("  arch_cfg:", FLAGS.arch_cfg)
     print("  data_cfg:", FLAGS.data_cfg)
     # print("  uncertainty:", FLAGS.uncertainty)
-    print("  Total of Trainable Parameters: {}".format(millify(pytorch_total_params,2)))
+    print(f"  Total of Trainable Parameters: {millify(pytorch_total_params, 2)}")
     print("  log:", FLAGS.log)
     print("  pretrained:", FLAGS.pretrained)
     print("----------\n")

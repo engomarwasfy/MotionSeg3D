@@ -116,7 +116,7 @@ class User():
             self.infer_subset(loader=self.parser.get_test_set(),
                               to_orig_fn=self.parser.to_original,
                               cnn=cnn, knn=knn)
-        elif self.split == None:
+        elif self.split is None:
             self.infer_subset(loader=self.parser.get_train_set(),
                               to_orig_fn=self.parser.to_original,
                               cnn=cnn, knn=knn)
@@ -151,9 +151,7 @@ class User():
 
             end = time.time()
 
-            for i, (proj_in, proj_mask, _, _, path_seq, path_name,
-                    p_x, p_y, proj_range, unproj_range, _, _, _, _, npoints)\
-                    in enumerate(tqdm(loader, ncols=80)):
+            for proj_in, proj_mask, _, _, path_seq, path_name, p_x, p_y, proj_range, unproj_range, _, _, _, _, npoints in tqdm(loader, ncols=80):
                 # first cut to rela size (batch size one allows it)
                 p_x = p_x[0, :npoints]
                 p_y = p_y[0, :npoints]
@@ -169,7 +167,7 @@ class User():
                     if self.post:
                         proj_range = proj_range.cuda()
                         unproj_range = unproj_range.cuda()
-                
+
                 end = time.time()
                 # compute output
                 proj_output, _ = self.model(proj_in)
@@ -184,11 +182,11 @@ class User():
 
                 # if knn --> use knn to postprocess
                 # 	else put in original pointcloud using indexes
-                if self.post:
-                    unproj_argmax = self.post(proj_range, unproj_range,
-                                              proj_argmax, p_x, p_y)
-                else:
-                    unproj_argmax = proj_argmax[p_y, p_x]
+                unproj_argmax = (
+                    self.post(proj_range, unproj_range, proj_argmax, p_x, p_y)
+                    if self.post
+                    else proj_argmax[p_y, p_x]
+                )
 
                 # measure elapsed time
                 if torch.cuda.is_available():

@@ -125,9 +125,6 @@ class Camera:
     SLIDE_SENSITIVITY = 0.5
     RAISE_SENSITIVITY = 0.5
 
-    LOOK_SENSITIVITY = 0.01
-    FREE_TURN_SENSITIVITY = 0.01
-
     dx = x - self.startx_
     dy = y - self.starty_
 
@@ -149,7 +146,10 @@ class Camera:
       self.sideVel_ = 0
       self.turnVel_ = 0
 
+      FREE_TURN_SENSITIVITY = 0.01
+
       self.yaw_ = self.startyaw_ - FREE_TURN_SENSITIVITY * dx
+      LOOK_SENSITIVITY = 0.01
       self.pitch_ = self.startpitch_ - LOOK_SENSITIVITY * dy
 
       # ensure valid values.

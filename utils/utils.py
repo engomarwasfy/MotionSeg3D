@@ -44,8 +44,7 @@ def str2bool(v):
 def load_yaml(path):
     try:
         print(f"\033[32m Opening arch config file {path}\033[0m")
-        yaml_data = yaml.safe_load(open(path, 'r'))
-        return yaml_data
+        return yaml.safe_load(open(path, 'r'))
     except Exception as e:
         print(e)
         print(f"Error opening {path} yaml file.")
@@ -58,24 +57,24 @@ def check_and_makedirs(dir_path):
 
 
 def check_pretrained_dir(path):
-    if path is not None:
-        if os.path.isdir(path):
-            print("\033[32m model folder exists! Using model from %s \033[0m" % (path))
-        else:
-            print("\033[32m model folder doesnt exist! Start with random weights...\033[0m")
-    else:
+    if path is None:
         print("\033[32m No pretrained directory found.\033[0m")
+
+    elif os.path.isdir(path):
+        print("\033[32m model folder exists! Using model from %s \033[0m" % (path))
+    else:
+        print("\033[32m model folder doesnt exist! Start with random weights...\033[0m")
 
 
 def check_model_dir(path):
-    if path is not None:
-        if os.path.isdir(path):
-            print("\033[32m model folder exists! Using model from %s \033[0m" % (path))
-        else:
-            print("\033[32m model folder doesnt exist! Can't infer...\033[0m")
-            quit()
-    else:
+    if path is None:
         print("\033[32m No model directory found.\033[0m")
+
+    elif os.path.isdir(path):
+        print("\033[32m model folder exists! Using model from %s \033[0m" % (path))
+    else:
+        print("\033[32m model folder doesnt exist! Can't infer...\033[0m")
+        quit()
 
 
 def make_logdir(FLAGS, resume_train=False):
@@ -83,25 +82,23 @@ def make_logdir(FLAGS, resume_train=False):
         if resume_train:
             if FLAGS.pretrained == "":
                 FLAGS.pretrained = None
-                if os.path.isdir(FLAGS.log):
-                    if os.listdir(FLAGS.log):
-                        answer = raw_input("Log Directory is not empty. Do you want to proceed? [y/n]  ")
-                        if answer == 'n':
-                            quit()
-                        else:
-                            shutil.rmtree(FLAGS.log)
-                os.makedirs(FLAGS.log)
-            else:
-                FLAGS.log = FLAGS.pretrained
-                print("Not creating new log file. Using pretrained directory")
-        else:
-            if os.path.isdir(FLAGS.log):
-                if os.listdir(FLAGS.log):
+                if os.path.isdir(FLAGS.log) and os.listdir(FLAGS.log):
                     answer = raw_input("Log Directory is not empty. Do you want to proceed? [y/n]  ")
                     if answer == 'n':
                         quit()
                     else:
                         shutil.rmtree(FLAGS.log)
+                os.makedirs(FLAGS.log)
+            else:
+                FLAGS.log = FLAGS.pretrained
+                print("Not creating new log file. Using pretrained directory")
+        else:
+            if os.path.isdir(FLAGS.log) and os.listdir(FLAGS.log):
+                answer = raw_input("Log Directory is not empty. Do you want to proceed? [y/n]  ")
+                if answer == 'n':
+                    quit()
+                else:
+                    shutil.rmtree(FLAGS.log)
             os.makedirs(FLAGS.log)
     except Exception as e:
         print(e)
@@ -113,9 +110,9 @@ def backup_to_logdir(FLAGS, pretrain_model=False):
     # copy all files to log folder (to remember what we did, and make inference
     # easier). Also, standardize name to be able to open it later
     try:
-        print("Copying files to %s for further reference." % FLAGS.log)
-        shutil.copyfile(FLAGS.arch_cfg, FLAGS.log + "/arch_cfg.yaml")
-        shutil.copyfile(FLAGS.data_cfg, FLAGS.log + "/data_cfg.yaml")
+        print(f"Copying files to {FLAGS.log} for further reference.")
+        shutil.copyfile(FLAGS.arch_cfg, f"{FLAGS.log}/arch_cfg.yaml")
+        shutil.copyfile(FLAGS.data_cfg, f"{FLAGS.log}/data_cfg.yaml")
 
         # Backup training code for later review
         code_backup_path = f"{FLAGS.log}/code"
@@ -127,7 +124,11 @@ def backup_to_logdir(FLAGS, pretrain_model=False):
         os.system(f"cp -r {os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'train_yaml'))} {code_backup_path}")
         os.system(f"cp -r {os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'utils'))} {code_backup_path}")
         if pretrain_model:
-            shutil.copyfile(FLAGS.pretrained + "/SalsaNextWithMotionAttention_valid_best", FLAGS.log + "/SalsaNextWithMotionAttention_valid_best")
+            shutil.copyfile(
+                f"{FLAGS.pretrained}/SalsaNextWithMotionAttention_valid_best",
+                f"{FLAGS.log}/SalsaNextWithMotionAttention_valid_best",
+            )
+
 
     except Exception as e:
         print(e)
@@ -144,7 +145,7 @@ def make_predictions_dir(FLAGS, DATA, rm_old=False):
             os.makedirs(FLAGS.log)
             os.makedirs(os.path.join(FLAGS.log, "sequences"))
         check_and_makedirs(os.path.join(FLAGS.log, "sequences"))
-        
+
         for seq in DATA["split"][FLAGS.split]:
             seq = '{0:02d}'.format(int(seq))
             print(f"{FLAGS.split} : {seq}")
@@ -155,12 +156,8 @@ def make_predictions_dir(FLAGS, DATA, rm_old=False):
         print("Error creating predictions directory. Check permissions!")
         raise
 
-    pass
-
 
 def get_args(flags=None):
-    splits = ["train", "valid", "test"]
-
     if flags == "train":
         parser = argparse.ArgumentParser("./train.py")
     elif flags == "infer":
@@ -184,7 +181,7 @@ def get_args(flags=None):
     #     type=str2bool, nargs='?',
     #     const=True, default=True,
     #     help='Set this if you want to use the Uncertainty Version')
-    
+
     if flags == "train":
         parser.add_argument(
             '--pretrained', '-p', type=str,
@@ -212,6 +209,8 @@ def get_args(flags=None):
             required=True,
             default=None,
             help='Directory to get the trained model.')
+        splits = ["train", "valid", "test"]
+
         parser.add_argument(
             '--split', '-s',
             type=str,

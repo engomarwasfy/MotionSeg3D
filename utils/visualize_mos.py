@@ -77,7 +77,7 @@ def get_args():
 
 
 if __name__ == '__main__':
-    
+
     parser = get_args()
     FLAGS, unparsed = parser.parse_known_args()
 
@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
     # open config file
     try:
-        print("Opening config file %s" % FLAGS.config)
+        print(f"Opening config file {FLAGS.config}")
         CFG = yaml.safe_load(open(FLAGS.config, 'r'))
     except Exception as e:
         print(e)
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     # does sequence folder exist?
     scan_paths = os.path.join(FLAGS.dataset, "sequences", FLAGS.sequence, "velodyne")
     if os.path.isdir(scan_paths):
-        print("Sequence folder exists! Using sequence from %s" % scan_paths)
+        print(f"Sequence folder exists! Using sequence from {scan_paths}")
     else:
         print("Sequence folder doesn't exist! Exiting...")
         quit()
@@ -125,7 +125,7 @@ if __name__ == '__main__':
         else:
             label_paths = os.path.join(FLAGS.dataset, "sequences", FLAGS.sequence, "labels")
         if os.path.isdir(label_paths):
-            print("Labels folder exists! Using labels from %s" % label_paths)
+            print(f"Labels folder exists! Using labels from {label_paths}")
         else:
             print(label_paths)
             print("Labels folder doesn't exist! Exiting...")

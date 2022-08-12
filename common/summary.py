@@ -32,9 +32,11 @@ def summary(model, input_size, batch_size=-1, device="cuda"):
                 params += torch.prod(torch.LongTensor(list(module.bias.size())))
             summary[m_key]["nb_params"] = params
 
-        if (not isinstance(module, nn.Sequential)
-              and not isinstance(module, nn.ModuleList)
-                and not (module == model)):
+        if (
+            not isinstance(module, nn.Sequential)
+            and not isinstance(module, nn.ModuleList)
+            and module != model
+        ):
             hooks.append(module.register_forward_hook(hook))
 
     device = device.lower()
@@ -67,8 +69,11 @@ def summary(model, input_size, batch_size=-1, device="cuda"):
     # remove these hooks
     for h in hooks:
         h.remove()
-    message = ""
-    message += "----------------------------------------------------------------\n"
+    message = (
+        ""
+        + "----------------------------------------------------------------\n"
+    )
+
     line_new = "{:>20}  {:>25} {:>15}".format("Layer (type)", "Output Shape", "Param #")
     message += line_new + "\n"
     message += "================================================================\n"
@@ -84,9 +89,11 @@ def summary(model, input_size, batch_size=-1, device="cuda"):
         )
         total_params += summary[layer]["nb_params"]
         total_output += np.prod(summary[layer]["output_shape"])
-        if "trainable" in summary[layer]:
-            if summary[layer]["trainable"] == True:
-                trainable_params += summary[layer]["nb_params"]
+        if (
+            "trainable" in summary[layer]
+            and summary[layer]["trainable"] == True
+        ):
+            trainable_params += summary[layer]["nb_params"]
         message += line_new + "\n"
 
     # assume 4 bytes/number (float on cuda).

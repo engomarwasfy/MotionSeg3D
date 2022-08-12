@@ -79,5 +79,12 @@ if __name__ == '__main__':
 			current_scan = load_vertex(raw_scan_files[frame_idx])
 
 			clean_scan = current_scan[mos_pred < 250]
-			np.array(clean_scan, dtype=np.float32).tofile(os.path.join(
-				clean_scan_root, "sequences", seq, "clean_scans", str(frame_idx).zfill(6) + '.bin'))
+			np.array(clean_scan, dtype=np.float32).tofile(
+				os.path.join(
+					clean_scan_root,
+					"sequences",
+					seq,
+					"clean_scans",
+					f'{str(frame_idx).zfill(6)}.bin',
+				)
+			)

@@ -96,4 +96,4 @@ if __name__ == '__main__':
 			file_name = os.path.join(combined_results_root, "sequences", seq, "predictions", str(frame_idx).zfill(6))
 			combine_pred.reshape((-1)).astype(np.uint32)
 			# print(file_name)
-			combine_pred.tofile(file_name + '.label')
+			combine_pred.tofile(f'{file_name}.label')

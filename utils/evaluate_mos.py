@@ -87,10 +87,10 @@ def get_args():
 
 
 if __name__ == '__main__':
-    
+
     parser = get_args()
     FLAGS, unparsed = parser.parse_known_args()
-    
+
     assert(FLAGS.split in splits)     # assert split
     assert(FLAGS.backend in backends) # assert backend
 
@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
     # make lookup table for mapping
     maxkey = max(class_remap.keys())
-    
+
     # +100 hack making lut bigger just in case there are unknown labels
     remap_lut = np.zeros((maxkey + 100), dtype=np.int32)
     remap_lut[list(class_remap.keys())] = list(class_remap.values())
@@ -138,16 +138,16 @@ if __name__ == '__main__':
             print("Ignoring xentropy class ", x_cl, " in IoU evaluation")
 
     # create evaluator
-    if FLAGS.backend == "torch":
-        from auxiliary.torch_ioueval import iouEval
-        evaluator = iouEval(nr_classes, ignore)
-        frame_evaluator = iouEval(nr_classes, ignore)
-    elif FLAGS.backend == "numpy":
+    if FLAGS.backend == "numpy":
         from auxiliary.np_ioueval import iouEval
         evaluator = iouEval(nr_classes, ignore)
         frame_evaluator = iouEval(nr_classes, ignore)
+    elif FLAGS.backend == "torch":
+        from auxiliary.torch_ioueval import iouEval
+        evaluator = iouEval(nr_classes, ignore)
+        frame_evaluator = iouEval(nr_classes, ignore)
     else:
-        print("Backend for evaluator should be one of ", str(backends))
+        print("Backend for evaluator should be one of ", backends)
         quit()
 
     evaluator.reset()
@@ -160,7 +160,7 @@ if __name__ == '__main__':
     lidar_names = []
     for sequence in test_sequences:
         sequence = '{0:02d}'.format(int(sequence))
-        label_paths = os.path.join(FLAGS.dataset, "sequences", str(sequence), "labels")
+        label_paths = os.path.join(FLAGS.dataset, "sequences", sequence, "labels")
         # populate the label names
         seq_label_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
             os.path.expanduser(label_paths)) for f in fn if ".label" in f]
@@ -168,7 +168,7 @@ if __name__ == '__main__':
         label_names.extend(seq_label_names)
 
         if FLAGS.radius != -1:
-            lidar_paths = os.path.join(FLAGS.dataset, "sequences", str(sequence), "velodyne")
+            lidar_paths = os.path.join(FLAGS.dataset, "sequences", sequence, "velodyne")
             seq_lidar_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
                 os.path.expanduser(lidar_paths)) for f in fn if ".bin" in f]
             seq_lidar_names.sort()
@@ -207,7 +207,7 @@ if __name__ == '__main__':
         if FLAGS.radius != -1:
             pc_xyz = np.fromfile(lidar_names[f_id], dtype=np.float32).reshape((-1, 4))[:, :3]
             depth = np.linalg.norm(pc_xyz, 2, axis=1)
-            
+
             radius_mask = np.ones((pc_xyz.shape[0]), dtype=bool)
             if FLAGS.radius > 0:
                 radius_mask = np.logical_and(depth <= FLAGS.radius, depth >= 2)
@@ -260,11 +260,12 @@ if __name__ == '__main__':
     # if codalab is necessary, then do it
     # for moving object detection, we only care about the results of moving objects
     if FLAGS.codalab is not None:
-        results = {}
-        for i, jacc in enumerate(class_jaccard):
-            if i not in ignore:
-                if int(class_inv_remap[i]) > 250:
-                    results["iou_moving"] = float(jacc)
+        results = {
+            "iou_moving": float(jacc)
+            for i, jacc in enumerate(class_jaccard)
+            if i not in ignore and int(class_inv_remap[i]) > 250
+        }
+
         # save to file
         output_filename = os.path.join(FLAGS.codalab, 'scores.txt')
         with open(output_filename, 'w') as yaml_file:

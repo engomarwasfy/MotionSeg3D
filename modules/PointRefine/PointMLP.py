@@ -43,8 +43,7 @@ class PointRefine(nn.Module):
         # torch.Size([124668, 9]) --> torch.Size([124668, 256])
         processed_point_fea = self.PPmodel(point_fea)
         logits = self.logits(processed_point_fea)
-        point_predict = F.softmax(logits, dim=1)
-        return point_predict
+        return F.softmax(logits, dim=1)
 
 
 if __name__ == '__main__':
@@ -59,6 +58,6 @@ if __name__ == '__main__':
     # t1 = time.time()
     # print(t1-t0)
 
-    total = sum([param.nelement() for param in model.parameters()])
+    total = sum(param.nelement() for param in model.parameters())
     print("Number of PointRefine parameter: %.2fM" % (total/1e6))
     # Number of PointRefine parameter: 0.04M

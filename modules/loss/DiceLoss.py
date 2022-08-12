@@ -76,18 +76,19 @@ class DiceLoss(nn.Module):
     def forward(self, input: torch.Tensor,
                 target: torch.Tensor) -> torch.Tensor:
         if not torch.is_tensor(input):
-            raise TypeError("Input type is not a torch.Tensor. Got {}"
-                            .format(type(input)))
-        if not len(input.shape) == 4:
-            raise ValueError("Invalid input shape, we expect BxNxHxW. Got: {}"
-                             .format(input.shape))
-        if not input.shape[-2:] == target.shape[-2:]:
-            raise ValueError("input and target shapes must be the same. Got: {}"
-                             .format(input.shape, input.shape))
-        if not input.device == target.device:
+            raise TypeError(f"Input type is not a torch.Tensor. Got {type(input)}")
+        if len(input.shape) != 4:
+            raise ValueError(f"Invalid input shape, we expect BxNxHxW. Got: {input.shape}")
+        if input.shape[-2:] != target.shape[-2:]:
             raise ValueError(
-                "input and target must be in the same device. Got: {}" .format(
-                    input.device, target.device))
+                f"input and target shapes must be the same. Got: {input.shape}"
+            )
+
+        if input.device != target.device:
+            raise ValueError(
+                f"input and target must be in the same device. Got: {input.device}"
+            )
+
         # compute softmax over the classes axis
         # input_soft = F.softmax(input, dim=1) # have done is network last layer
 

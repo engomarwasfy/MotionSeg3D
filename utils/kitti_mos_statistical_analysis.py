@@ -63,21 +63,19 @@ class SeqKITTI():
             for frame_idx in range(len(velodyne_seq_files)):
 
                 f1_xyzi, f1_semlabel, f1_inslabel = \
-                    get_frame_data(
+                        get_frame_data(
                         pc_path=velodyne_seq_files[frame_idx], label_path=gtsemantic_seq_files[frame_idx])
 
                 f1_moving_label_mask = (f1_semlabel > 250)
 
                 if f1_moving_label_mask.sum() > self.moving_threshold_num_points:
                     num_moving_frames += 1
-                
+
                 if write_to_txt:
                     linestr = f"{seq} " + "%06d"%frame_idx + f" {f1_moving_label_mask.sum()}\n"
                     fo.write(linestr)
 
             print(f"Seq {seq} | Moving frames / all == {num_moving_frames}/{len(velodyne_seq_files)} = {num_moving_frames / len(velodyne_seq_files)}")
-
-        pass
 
     def count_seqs_points(self,):
 
@@ -101,22 +99,22 @@ class SeqKITTI():
 
     def count_moving_points_in_seqs(self,):
 
+        length_min = 1000000
+        length_max = -1
+        # assert len(velodyne_seq_files) == len(gtsemantic_seq_files)
+
+        num_moving_frames = 0
         for seq in self.seqs:
 
-            length_min = 1000000
-            length_max = -1
             # load point cloud files
             velodyne_seq_path = os.path.join(dataset_path, "sequences", seq, "velodyne")
             velodyne_seq_files = sorted(glob.glob(os.path.join(velodyne_seq_path, "*.bin")))
 
             velodyne_seq_files, gtsemantic_seq_files = self.get_file_list(seq_id=seq)
-            # assert len(velodyne_seq_files) == len(gtsemantic_seq_files)
-
-            num_moving_frames = 0
             for frame_idx in tqdm(range(len(velodyne_seq_files))):
 
                 f1_xyzi, f1_semlabel, f1_inslabel = \
-                    get_frame_data(pc_path=velodyne_seq_files[frame_idx], label_path=gtsemantic_seq_files[frame_idx])
+                        get_frame_data(pc_path=velodyne_seq_files[frame_idx], label_path=gtsemantic_seq_files[frame_idx])
 
                 # mapping rae semantic labels to LiDAR-MOS labels
                 f1_moving_label_mask = (f1_semlabel > 250)

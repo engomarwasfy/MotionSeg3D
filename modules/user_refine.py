@@ -43,7 +43,7 @@ class UserRefine(User):
             self.infer_subset(loader=self.parser.get_test_set(),
                               to_orig_fn=self.parser.to_original,
                               coarse=coarse, reproj=reproj, refine=refine)
-        elif self.split == None:
+        elif self.split is None:
             self.infer_subset(loader=self.parser.get_train_set(),
                               to_orig_fn=self.parser.to_original,
                               coarse=coarse, reproj=reproj, refine=refine)
@@ -78,10 +78,7 @@ class UserRefine(User):
 
             end = time.time()
 
-            for i, (proj_in, proj_mask, _, _, path_seq, path_name,
-                    p_x, p_y, proj_range, unproj_range, _, unproj_xyz, _, _, npoints)\
-                    in enumerate(tqdm(loader, ncols=80)):
-
+            for proj_in, proj_mask, _, _, path_seq, path_name, p_x, p_y, proj_range, unproj_range, _, unproj_xyz, _, _, npoints in tqdm(loader, ncols=80):
                 # first cut to rela size (batch size one allows it)
                 p_x = p_x[0, :npoints]
                 p_y = p_y[0, :npoints]

@@ -35,8 +35,7 @@ class ResContextBlock(nn.Module):
         resA = self.act3(resA)
         resA2 = self.bn2(resA)
 
-        output = shortcut + resA2
-        return output
+        return shortcut + resA2
 
 
 class ResBlock(nn.Module):
@@ -93,19 +92,12 @@ class ResBlock(nn.Module):
         resA = shortcut + resA
 
 
+        resB = self.dropout(resA) if self.drop_out else resA
         if self.pooling:
-            if self.drop_out:
-                resB = self.dropout(resA)
-            else:
-                resB = resA
             resB = self.pool(resB)
 
             return resB, resA
         else:
-            if self.drop_out:
-                resB = self.dropout(resA)
-            else:
-                resB = resA
             return resB
 
 
@@ -178,13 +170,13 @@ class SalsaNext(nn.Module):
         ### mos modification
         if params['train']['residual']:
             self.input_size = 5 + params['train']['n_input_scans']
-        
+
         else:
             self.input_size = 5 * params['train']['n_input_scans']
 
         print("Depth of backbone input = ", self.input_size)
         ###
-        
+
         self.downCntx = ResContextBlock(self.input_size, 32)
         self.downCntx2 = ResContextBlock(32, 32)
         self.downCntx3 = ResContextBlock(32, 32)

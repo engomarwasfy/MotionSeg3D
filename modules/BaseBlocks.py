@@ -36,8 +36,7 @@ class ResContextBlock(nn.Module):
         resA = self.act3(resA)
         resA2 = self.bn2(resA)
 
-        output = shortcut + resA2
-        return output
+        return shortcut + resA2
 
 
 class ResBlock(nn.Module):
@@ -216,23 +215,9 @@ class MetaKernel(nn.Module):
         if isinstance(pad, int):
             pad = (pad, pad)
 
-        # https://mxnet.apache.org/versions/1.8.0/api/python/docs/api/symbol/symbol.html#mxnet.symbol.im2col
-        # output = mx.symbol.im2col(
-        #     name=name + "sampler",
-        #     data=data,
-        #     kernel=kernel,
-        #     stride=stride,
-        #     dilate=dilate,
-        #     pad=pad)
-
-        # https://pytorch.org/docs/stable/generated/torch.nn.Unfold.html
-        # torch._C._nn.im2col(input, _pair(kernel_size), _pair(dilation), _pair(padding), _pair(stride))
-        output = F.unfold(data, kernel_size=kernel, 
-                                dilation=dilate,
-                                stride=stride, 
-                                padding=pad)
-
-        return output
+        return F.unfold(
+            data, kernel_size=kernel, dilation=dilate, stride=stride, padding=pad
+        )
 
     def sample_data(self, data, kernel_size):
         """
@@ -241,13 +226,9 @@ class MetaKernel(nn.Module):
         :param kernel_size: int default=3
         :return: sample_output: num_batch, num_channel_in * kernel_size * kernel_size, H, W
         """
-        sample_output = self.sampler_im2col(
-            data=data,
-            kernel=kernel_size,
-            stride=1,
-            pad=1,
-            dilate=1)
-        return sample_output
+        return self.sampler_im2col(
+            data=data, kernel=kernel_size, stride=1, pad=1, dilate=1
+        )
 
     def sample_coord(self, coord, kernel_size):
         """
@@ -256,14 +237,9 @@ class MetaKernel(nn.Module):
         :param kernel_size: int default=3
         :return: coord_sample_data: num_batch, num_channel_in * kernel_size * kernel_size, H, W
         """
-        coord_sample_data = self.sampler_im2col(
-            data=coord,
-            kernel=kernel_size,
-            stride=1,
-            pad=1,
-            dilate=1)
-
-        return coord_sample_data
+        return self.sampler_im2col(
+            data=coord, kernel=kernel_size, stride=1, pad=1, dilate=1
+        )
 
     def relative_coord(self, sample_coord, center_coord, num_channel_in, kernel_size):
         """
@@ -286,12 +262,9 @@ class MetaKernel(nn.Module):
         # ic(sample_reshape.size())
 
         center_coord_expand = torch.unsqueeze(center_coord, dim=2)  # expand_dims
-        # ic(center_coord_expand.size())
-
-        rel_coord = torch.subtract(sample_reshape, center_coord_expand)
         # ic(rel_coord.size())
 
-        return rel_coord
+        return torch.subtract(sample_reshape, center_coord_expand)
 
     def mlp(self, data, in_channels, channel_list=None, b_mul=1, use_norm=False):
         """
@@ -323,20 +296,10 @@ class MetaKernel(nn.Module):
             y = self.bn1(y)
         y = self.act1(y)
         y = self.conv2(y)
-        # ic(y.size())
-
-        mlp_output_reshape = torch.reshape(
-            y,
-            shape=(
-                self.num_batch * b_mul,
-                channel_list[-1],
-                -1,
-                self.H,
-                self.W
-            )
-        )
         # ic(mlp_output_reshape.size())
-        return mlp_output_reshape
+        return torch.reshape(
+            y, shape=(self.num_batch * b_mul, channel_list[-1], -1, self.H, self.W)
+        )
 
     def forward(self, data, coord_data, data_channels, coord_channels, kernel_size=3):
         """

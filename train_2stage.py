@@ -31,12 +31,17 @@ def set_seed(seed=1024):
 if __name__ == '__main__':
     parser = get_args(flags="train")
     FLAGS, unparsed = parser.parse_known_args()
-    FLAGS.log = FLAGS.log + '/logs/' + datetime.now().strftime("%Y-%-m-%d-%H:%M") + FLAGS.name
-    
+    FLAGS.log = (
+        f'{FLAGS.log}/logs/'
+        + datetime.now().strftime("%Y-%-m-%d-%H:%M")
+        + FLAGS.name
+    )
+
+
     # open arch / data config file
     ARCH = load_yaml(FLAGS.arch_cfg)
     DATA = load_yaml(FLAGS.data_cfg)
-    
+
     # params = SalsaNextWithMotionAttention(nclasses=3, params=ARCH)
     # pytorch_total_params = sum(p.numel() for p in params.parameters() if p.requires_grad)
     # del params

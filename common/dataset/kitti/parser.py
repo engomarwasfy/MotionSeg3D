@@ -120,7 +120,7 @@ class SemanticKitti(Dataset):
 
         # make sure directory exists
         if os.path.isdir(self.root):
-            print("Sequences folder exists! Using sequences from %s" % self.root)
+            print(f"Sequences folder exists! Using sequences from {self.root}")
         else:
             raise ValueError("Sequences folder doesn't exist! Exiting...")
 
@@ -135,13 +135,13 @@ class SemanticKitti(Dataset):
         self.poses = {}
         if self.use_residual:
             for i in range(self.n_input_scans):
-                exec("self.residual_files_" + str(str(i+1)) + " = {}")
+                exec(f"self.residual_files_{str(i + 1)}" + " = {}")
 
         # fill in with names, checking that all sequences are complete
         for seq in self.sequences:
 
             seq = '{0:02d}'.format(int(seq)) # to string
-            print("parsing seq {}".format(seq))
+            print(f"parsing seq {seq}")
 
             # get paths for each
             scan_path = os.path.join(self.root, seq, "velodyne")
@@ -149,8 +149,8 @@ class SemanticKitti(Dataset):
 
             if self.use_residual:
                 for i in range(self.n_input_scans):
-                    folder_name = "residual_images_" + str(i+1)
-                    exec("residual_path_" + str(i+1) + " = os.path.join(self.root, seq, folder_name)")
+                    folder_name = f"residual_images_{str(i + 1)}"
+                    exec(f"residual_path_{str(i + 1)} = os.path.join(self.root, seq, folder_name)")
 
             # get files
             scan_files = [os.path.join(dp, f) for dp, dn, fn in os.walk(
@@ -160,9 +160,19 @@ class SemanticKitti(Dataset):
 
             if self.use_residual:
                 for i in range(self.n_input_scans):
-                    exec("residual_files_" + str(i+1) + " = " + '[os.path.join(dp, f) for dp, dn, fn in '
-                             'os.walk(os.path.expanduser(residual_path_' + str(i+1) + '))'
-                             ' for f in fn if is_residual(f)]')
+                    exec(
+                        (
+                            (
+                                f"residual_files_{str(i + 1)} = "
+                                + '[os.path.join(dp, f) for dp, dn, fn in '
+                                'os.walk(os.path.expanduser(residual_path_'
+                            )
+                            + str(i + 1)
+                            + '))'
+                            ' for f in fn if is_residual(f)]'
+                        )
+                    )
+
 
             ### Get poses and transform them to LiDAR coord frame for transforming point clouds
             # load poses
@@ -177,9 +187,11 @@ class SemanticKitti(Dataset):
             T_velo_cam = np.linalg.inv(T_cam_velo)
 
             # convert kitti poses from camera coord to LiDAR coord
-            new_poses = []
-            for pose in poses:
-                new_poses.append(T_velo_cam.dot(inv_frame0).dot(pose).dot(T_cam_velo))
+            new_poses = [
+                T_velo_cam.dot(inv_frame0).dot(pose).dot(T_cam_velo)
+                for pose in poses
+            ]
+
             self.poses[seq] = np.array(new_poses)
 
             # check all scans have labels
@@ -207,8 +219,8 @@ class SemanticKitti(Dataset):
 
             if self.use_residual:
                 for i in range(self.n_input_scans):
-                    exec("residual_files_" + str(i+1) + ".sort()")
-                    exec("self.residual_files_" + str(i+1) + "[seq]" + " = " + "residual_files_" + str(i+1))
+                    exec(f"residual_files_{str(i + 1)}.sort()")
+                    exec(f"self.residual_files_{str(i + 1)}[seq] = residual_files_{str(i + 1)}")
         # print("\033[32m No model directory found.\033[0m")
 
         print(f"\033[32m There are {self.dataset_size} frames in total. \033[0m")

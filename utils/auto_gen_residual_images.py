@@ -28,11 +28,11 @@ def check_and_makedirs(dir_path):
 
 
 def load_yaml(path):
-    if yaml.__version__ >= '5.1':
-        config = yaml.load(open(path), Loader=yaml.FullLoader)
-    else:
-        config = yaml.load(open(path))
-    return config
+    return (
+        yaml.load(open(path), Loader=yaml.FullLoader)
+        if yaml.__version__ >= '5.1'
+        else yaml.load(open(path))
+    )
 
 
 def process_one_seq(config):
@@ -63,9 +63,10 @@ def process_one_seq(config):
     T_velo_cam = np.linalg.inv(T_cam_velo)
 
     # convert kitti poses from camera coord to LiDAR coord
-    new_poses = []
-    for pose in poses:
-        new_poses.append(T_velo_cam.dot(inv_frame0).dot(pose).dot(T_cam_velo))
+    new_poses = [
+        T_velo_cam.dot(inv_frame0).dot(pose).dot(T_cam_velo) for pose in poses
+    ]
+
     poses = np.array(new_poses)
 
     # load LiDAR scans
@@ -88,9 +89,7 @@ def process_one_seq(config):
                        dtype=np.float32)  # [H,W] range (0 is no data)
 
         # for the first N frame we generate a dummy file
-        if frame_idx < num_last_n:
-            np.save(file_name, diff_image)
-        else:
+        if frame_idx >= num_last_n:
             # load current scan and generate current range image
             current_pose = poses[frame_idx]
             current_scan = load_vertex(scan_paths[frame_idx])
@@ -138,8 +137,7 @@ def process_one_seq(config):
                 plt.savefig(image_name)
                 plt.close()
 
-            # save residual image
-            np.save(file_name, diff_image)
+        np.save(file_name, diff_image)
 
 
 if __name__ == '__main__':
@@ -150,7 +148,7 @@ if __name__ == '__main__':
     config = load_yaml(config_filename)
 
     # used for kitti-raw and kitti-road
-    for seq in range(0, 10): # sequences id
+    for seq in range(10): # sequences id
 
         for i in range(1,9): # residual_image_i
 

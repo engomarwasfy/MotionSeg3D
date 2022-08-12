@@ -22,8 +22,7 @@ def get_mpl_colormap(cmap_name):
 
 
 def rotate_mat( axis, radian):
-    rot_matrix = linalg.expm(np.cross(np.eye(3), axis / linalg.norm(axis) * radian))
-    return rot_matrix
+    return linalg.expm(np.cross(np.eye(3), axis / linalg.norm(axis) * radian))
     # print(type(rot_matrix))
 
 
@@ -43,7 +42,6 @@ def gen_depth_data(scan_folder, dst_folder, normalize=False):
     # load LiDAR scan files
     scan_paths = load_files(scan_folder)
 
-    depths = []
     axis_x, axis_y, axis_z = [1,0,0], [0,1,0], [0, 0, 1]
 
     # iterate over all scan files
@@ -64,13 +62,13 @@ def gen_depth_data(scan_folder, dst_folder, normalize=False):
         dst_path = os.path.join(dst_folder, str(idx).zfill(6))
 
         # np.save(dst_path, proj_range)
-        filename = dst_path + ".png"
+        filename = f"{dst_path}.png"
         color_img = cv2.applyColorMap(proj_range.astype(np.uint8),  get_mpl_colormap('viridis'))#cv2.COLORMAP_RAINBOW)
 
         cv2.imwrite(filename, color_img)
         print('finished generating depth data at: ', filename)
 
-    return depths
+    return []
 
 
 if __name__ == '__main__':

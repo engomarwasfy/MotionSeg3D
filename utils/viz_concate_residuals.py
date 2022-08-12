@@ -9,7 +9,7 @@ from glob import glob
 
 
 if __name__ == '__main__':
-    
+
     path = "data/sequences/00/"
 
     save_path = os.path.join(path, "concate_residual")
@@ -25,13 +25,6 @@ if __name__ == '__main__':
             tmp = f"{path}/visualization_{i}/{'%06d'%fid}.png"
             print(tmp)
             tmp_img = cv2.imread(tmp)
-            if i == 1:
-                img = tmp_img
-            else:
-                img = np.concatenate((img, tmp_img), axis=0)
-
-        if False:
-            cv2.imwrite(f"{save_path}/{'%06d'%fid}_8res.png", img)
-
-        cv2.imshow(f"residual image", img)
+            img = tmp_img if i == 1 else np.concatenate((img, tmp_img), axis=0)
+        cv2.imshow("residual image", img)
         cv2.waitKey()
